@@ -7,54 +7,32 @@ using System.Threading.Tasks;
 
 namespace Catnap.Server.Util
 {
-    public class RESTPath
+  public class RESTPath
+  {
+    public Regex PathReMatch { get; private set; }
+
+    private Dictionary<int, string> Parameters = new Dictionary<int, string>();
+
+    private RESTPath()
     {
-        public String Path { get; set; } = "";
-        public bool ContainsParameters { get; set; } = false;
-        public Dictionary<int, string> Parameters = new Dictionary<int, string>();
-
-        private RESTPath()
-        {
-
-        }
-
-
-        public static RESTPath Combine(params string[] paths)
-        {
-            var restPath = new RESTPath();
-            var segments = paths.SelectMany(p => p.Split('/'));
-
-            String path = "";
-            int segmentCount = 0;
-            foreach(var segment in segments)
-            {
-                if (segment == String.Empty)
-                    continue;
-
-                var trimSegment = segment.Trim('/');
-                if (trimSegment.StartsWith("{") && trimSegment.EndsWith("}"))
-                {
-                    restPath.Parameters.Add(segmentCount, trimSegment.Trim('{', '}'));
-                    path += "/[a-zA-Z0-9]+"; 
-                } 
-                else
-                    path += "/" + trimSegment;
-
-                segmentCount++;
-            }
-            if (restPath.Parameters.Count > 0)
-                restPath.ContainsParameters = true;
-
-            restPath.Path = path;
-
-            return restPath;
-        }
-
-        public bool Matches(String path)
-        {
-            var regex = new Regex($"^{Path}/?$");
-
-            return regex.IsMatch(path);
-        }
     }
+
+    public static RESTPath Combine(params string[] paths)
+    {
+      // trim "/"s from the paths, re-combine into an array ready to join with "/" delimiters
+      var newPath = string.Join("/", paths.Select(path => path.Trim('/')).ToArray());
+
+      // replace "{" <param name> "}" with regex pattern used for matching parameters
+      return new RESTPath()
+      {
+        // (?<name>pattern)
+        PathReMatch = new Regex("^" + Regex.Replace(newPath, "{([^}]*)}", "(?<$1>[\\w\\.-]+)") + "/?$")
+      };
+    }
+
+    public bool Matches(String path)
+    {
+      return PathReMatch.IsMatch(path);
+    }
+  }
 }

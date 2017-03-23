@@ -23,7 +23,7 @@ namespace Catnap.Server.Handlers
             Controllers.Add(controller);
         }
 
-        public async override Task<HttpResponse> Handle(HttpRequest request)
+        public async override Task<HttpResponseBase> Handle(HttpRequest request)
         {
             var url = request.Path;
             var controller = Controllers.SingleOrDefault(c => url.PathAndQuery.Contains(c.Prefix));

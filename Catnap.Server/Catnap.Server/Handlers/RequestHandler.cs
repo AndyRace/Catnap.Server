@@ -8,6 +8,6 @@ namespace Catnap.Server.Handlers
 {
     public abstract class RequestHandler
     {
-        public abstract Task<HttpResponse> Handle(HttpRequest request);
+        public abstract Task<HttpResponseBase> Handle(HttpRequest request);
     }
 }

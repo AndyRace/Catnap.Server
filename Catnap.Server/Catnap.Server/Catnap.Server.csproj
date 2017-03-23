@@ -107,6 +107,7 @@
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FileResponse.cs" />
     <Compile Include="JsonResponse.cs" />
     <Compile Include="Handlers\RESTHandler.cs" />
     <Compile Include="Util\ContentTypeMapper.cs" />

@@ -36,30 +36,39 @@ namespace Catnap.Server
     }
 
 
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple =false)]
-    public class Route : Attribute
+  [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+  public class Route : Attribute
+  {
+    private string path;
+
+    public Route(string path)
     {
-        private string path;
-
-        public Route(string path)
-        {
-            this.path = path;
-        }
-
-        public Route()
-        {
-            this.path = String.Empty;
-        }
-
-
-        public virtual string Path
-        {
-            get { return this.path; }
-        }
-
+      this.path = path;
     }
 
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public Route()
+    {
+      this.path = String.Empty;
+    }
+
+
+    public virtual string Path
+    {
+      get { return this.path; }
+    }
+
+  }
+
+  // Apply this attribute as a catch-all for requests
+  [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+  public class DefaultRoute : Attribute
+  {
+    public DefaultRoute()
+    {
+    }
+  }
+
+  [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public abstract class HttpRequestMethod : Attribute
     {
         public virtual HttpMethod Method { get; }
