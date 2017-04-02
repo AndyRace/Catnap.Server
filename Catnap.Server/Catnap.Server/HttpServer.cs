@@ -30,76 +30,77 @@ namespace Catnap.Server
       port = serverPort;
       listener.ConnectionReceived += async (s, e) => await ThreadPool.RunAsync(async (w) =>
       {
-        var socket = e.Socket;
         try
         {
-          await ProcessRequestAsync(socket);
-        }
-        catch (Exception ex)
-        {
-          try
+          using (var socket = e.Socket)
           {
-            await WriteInternalServerErrorResponse(socket, ex);
-          }
-          catch (Exception)
-          {
-            Debug.WriteLine("ERROR: Unable to write error response!");
+            try
+            {
+              await ProcessRequestAsync(socket);
+            }
+            catch (Exception ex)
+            {
+              await WriteInternalServerErrorResponse(socket, ex);
+            }
+            finally
+            {
+              await socket.CancelIOAsync();
+            }
           }
         }
-        finally
+        catch (Exception ex2)
         {
-          await socket.CancelIOAsync();
-          socket.Dispose();
+          Debug.WriteLine($"ERROR: Fatal error! ({ex2.Message})");
         }
       });
     }
 
-    public async Task StartServerAsync()
+  public async Task StartServerAsync()
+  {
+    await listener.BindServiceNameAsync(port.ToString());
+  }
+
+  private async Task ProcessRequestAsync(StreamSocket socket)
+  {
+    HttpRequest request;
+    request = HttpRequest.Read(socket);
+
+    if (AcceptedVerbs.Contains(request.Method.Method))
     {
-      await listener.BindServiceNameAsync(port.ToString());
-    }
-
-    private async Task ProcessRequestAsync(StreamSocket socket)
-    {
-      HttpRequest request;
-      request = HttpRequest.Read(socket);
-
-      if (AcceptedVerbs.Contains(request.Method.Method))
-      {
-        HttpResponseBase response;
-        response = await RestHandler.Handle(request);
-        await WriteResponse(response, socket);
-      }
-    }
-
-    private static async Task WriteInternalServerErrorResponse(StreamSocket socket, Exception ex)
-    {
-      var httpResponse = GetInternalServerError(ex);
-      await WriteResponse(httpResponse, socket);
-    }
-
-    private static HttpResponse GetInternalServerError(Exception exception)
-    {
-      var errorMessage = "Internal server error occurred.";
-      if (Debugger.IsAttached)
-        errorMessage += Environment.NewLine + exception;
-
-      var httpResponse = new HttpResponse(HttpStatusCode.InternalServerError, errorMessage);
-      return httpResponse;
-    }
-
-    private static async Task WriteResponse(HttpResponseBase response, StreamSocket socket)
-    {
-      var output = socket.OutputStream;
-      using (var stream = output.AsStreamForWrite())
-      {
-        await response.WriteToStream(stream);
-      }
-    }
-
-    public void Dispose()
-    {
-      listener.Dispose();
+      HttpResponseBase response;
+      response = await RestHandler.Handle(request);
+      await WriteResponse(response, socket);
     }
   }
+
+  private static async Task WriteInternalServerErrorResponse(StreamSocket socket, Exception ex)
+  {
+    var httpResponse = GetInternalServerError(ex);
+    await WriteResponse(httpResponse, socket);
+  }
+
+  private static HttpResponse GetInternalServerError(Exception exception)
+  {
+    var errorMessage = "Internal server error occurred.";
+    if (Debugger.IsAttached)
+      errorMessage += Environment.NewLine + exception;
+
+    var httpResponse = new HttpResponse(HttpStatusCode.InternalServerError, errorMessage);
+    return httpResponse;
+  }
+
+  private static async Task WriteResponse(HttpResponseBase response, StreamSocket socket)
+  {
+    var output = socket.OutputStream;
+    using (var stream = output.AsStreamForWrite())
+    {
+      await response.WriteToStream(stream);
+    }
+  }
+
+  public void Dispose()
+  {
+    listener.Dispose();
+  }
+}
 }
