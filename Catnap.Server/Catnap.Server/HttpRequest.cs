@@ -32,35 +32,40 @@ namespace Catnap.Server
       Content = content;
     }
 
+    /// <summary>
+    /// Read a request from the indicated socket.
+    /// </summary>
+    /// <param name="socket"></param>
+    /// <returns>Can return NULL if the socket is empty</returns>
     public static HttpRequest Read(StreamSocket socket)
     {
-      HttpRequest request = new HttpRequest();
-
       using (var input = socket.InputStream)
       {
         using (var reader = new StreamReader(input.AsStreamForRead()))
         {
           var requestHeader = reader.ReadLine();
 
-          if (requestHeader != null)
-          {
-            var headerSegments = requestHeader.Split(' ');
-            request.Method = new HttpMethod(headerSegments[0]);
-            request.Path = new Uri(headerSegments[1], UriKind.RelativeOrAbsolute);
-            request.Version = GetHttpVersion(headerSegments[2]);
+          if (requestHeader == null)
+            throw new Exception("Unexpected end of socked stream");
 
-            if (request.Version.Equals(HttpVersion.Http10))
-              request.Headers.Add("Host", $"{socket.Information.LocalAddress}:{socket.Information.LocalPort}");
-          }
+          var request = new HttpRequest();
+
+          var headerSegments = requestHeader.Split(' ');
+          request.Method = new HttpMethod(headerSegments[0]);
+          request.Path = new Uri(headerSegments[1], UriKind.RelativeOrAbsolute);
+          request.Version = GetHttpVersion(headerSegments[2]);
+
+          if (request.Version.Equals(HttpVersion.Http10))
+            request.Headers.Add("Host", $"{socket.Information.LocalAddress}:{socket.Information.LocalPort}");
 
           ParseRequest(reader, request);
 
           if (!request.Path.IsAbsoluteUri)
             request.Path = new UriBuilder("http", socket.Information.LocalAddress.ToString(), int.Parse(socket.Information.LocalPort), request.Path.OriginalString).Uri;
+
+          return request;
         }
       }
-
-      return request;
     }
 
     private static void ParseRequest(StreamReader reader, HttpRequest request)

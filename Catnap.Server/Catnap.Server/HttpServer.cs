@@ -64,52 +64,52 @@ namespace Catnap.Server
       });
     }
 
-  public async Task StartServerAsync()
-  {
-    await listener.BindServiceNameAsync(port.ToString());
-  }
-
-  private async Task ProcessRequestAsync(StreamSocket socket)
-  {
-    HttpRequest request;
-    request = HttpRequest.Read(socket);
-
-    if (AcceptedVerbs.Contains(request.Method.Method))
+    public async Task StartServerAsync()
     {
-      HttpResponseBase response;
-      response = await RestHandler.Handle(request);
-      await WriteResponse(response, socket);
+      await listener.BindServiceNameAsync(port.ToString());
+    }
+
+    private async Task ProcessRequestAsync(StreamSocket socket)
+    {
+      HttpRequest request;
+      request = HttpRequest.Read(socket);
+
+      if (AcceptedVerbs.Contains(request.Method.Method))
+      {
+        HttpResponseBase response;
+        response = await RestHandler.Handle(request);
+        await WriteResponse(response, socket);
+      }
+    }
+
+    private static async Task WriteInternalServerErrorResponse(StreamSocket socket, Exception ex)
+    {
+      var httpResponse = GetInternalServerError(ex);
+      await WriteResponse(httpResponse, socket);
+    }
+
+    private static HttpResponse GetInternalServerError(Exception exception)
+    {
+      var errorMessage = "Internal server error occurred.";
+      if (Debugger.IsAttached)
+        errorMessage += Environment.NewLine + exception;
+
+      var httpResponse = new HttpResponse(HttpStatusCode.InternalServerError, errorMessage);
+      return httpResponse;
+    }
+
+    private static async Task WriteResponse(HttpResponseBase response, StreamSocket socket)
+    {
+      var output = socket.OutputStream;
+      using (var stream = output.AsStreamForWrite())
+      {
+        await response.WriteToStream(stream);
+      }
+    }
+
+    public void Dispose()
+    {
+      listener.Dispose();
     }
   }
-
-  private static async Task WriteInternalServerErrorResponse(StreamSocket socket, Exception ex)
-  {
-    var httpResponse = GetInternalServerError(ex);
-    await WriteResponse(httpResponse, socket);
-  }
-
-  private static HttpResponse GetInternalServerError(Exception exception)
-  {
-    var errorMessage = "Internal server error occurred.";
-    if (Debugger.IsAttached)
-      errorMessage += Environment.NewLine + exception;
-
-    var httpResponse = new HttpResponse(HttpStatusCode.InternalServerError, errorMessage);
-    return httpResponse;
-  }
-
-  private static async Task WriteResponse(HttpResponseBase response, StreamSocket socket)
-  {
-    var output = socket.OutputStream;
-    using (var stream = output.AsStreamForWrite())
-    {
-      await response.WriteToStream(stream);
-    }
-  }
-
-  public void Dispose()
-  {
-    listener.Dispose();
-  }
-}
 }

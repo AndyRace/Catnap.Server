@@ -68,34 +68,52 @@ namespace Catnap.Server
     }
   }
 
+  // Apply this attribute to methods that will be called before any routes are executed
+  [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+  public class PreRoute : Attribute
+  {
+    public PreRoute()
+    {
+    }
+  }
+
+  // Apply this attribute to methods that will be called after any routes are executed
+  [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+  public class PostRoute : Attribute
+  {
+    public PostRoute()
+    {
+    }
+  }
+
   [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public abstract class HttpRequestMethod : Attribute
-    {
-        public virtual HttpMethod Method { get; }
-    }
+  public abstract class HttpRequestMethod : Attribute
+  {
+    public virtual HttpMethod Method { get; }
+  }
 
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class HttpGet : HttpRequestMethod
-    {
-        public override HttpMethod Method { get; } = HttpMethod.Get;
-    }
+  [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+  public class HttpGet : HttpRequestMethod
+  {
+    public override HttpMethod Method { get; } = HttpMethod.Get;
+  }
 
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class HttpPost : HttpRequestMethod
-    {
-        public override HttpMethod Method { get; } = HttpMethod.Post;
-    }
+  [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+  public class HttpPost : HttpRequestMethod
+  {
+    public override HttpMethod Method { get; } = HttpMethod.Post;
+  }
 
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class HttpDelete : HttpRequestMethod
-    {
-        public override HttpMethod Method { get; } = HttpMethod.Delete;
-    }
+  [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+  public class HttpDelete : HttpRequestMethod
+  {
+    public override HttpMethod Method { get; } = HttpMethod.Delete;
+  }
 
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class HttpPut : HttpRequestMethod
-    {
-        public override HttpMethod Method { get; } = HttpMethod.Put;
-    }
+  [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+  public class HttpPut : HttpRequestMethod
+  {
+    public override HttpMethod Method { get; } = HttpMethod.Put;
+  }
 
 }

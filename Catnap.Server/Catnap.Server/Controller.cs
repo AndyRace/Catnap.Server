@@ -1,27 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Windows.Web;
 using Windows.Web.Http;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.IO;
 using Catnap.Server.Util;
-using System.Text.RegularExpressions;
 
 namespace Catnap.Server
 {
   public abstract class Controller
   {
     public string Prefix = "";
-    public List<MethodInfo> RoutingMethods;
-    public List<MethodInfo> DefaultMethods;
+    public List<MethodInfo> RoutingMethods, DefaultMethods, PreMethods, PostMethods;
 
     public Controller()
     {
-      var type = this.GetType().GetTypeInfo();
+      var type = GetType().GetTypeInfo();
       var routePrefix = (RoutePrefix)this.GetType().GetTypeInfo().GetCustomAttribute(typeof(RoutePrefix));
 
       if (routePrefix == null) throw new Exception("Please add a RoutePrefix attribute to your Controller");
@@ -31,6 +26,8 @@ namespace Catnap.Server
       var methods = GetType().GetMethods().ToList();
       RoutingMethods = methods.Where(m => m.GetCustomAttribute(typeof(Route)) != null).ToList();
       DefaultMethods = methods.Where(m => m.GetCustomAttribute(typeof(DefaultRoute)) != null).ToList();
+      PreMethods = methods.Where(m => m.GetCustomAttribute(typeof(PreRoute)) != null).ToList();
+      PostMethods = methods.Where(m => m.GetCustomAttribute(typeof(PostRoute)) != null).ToList();
     }
 
     public async Task<HttpResponseBase> Handle(HttpRequest request)
@@ -39,39 +36,65 @@ namespace Catnap.Server
       var httpMethod = request.Method;
       var requestPath = Uri.UnescapeDataString(url.AbsolutePath);
 
-      foreach (var route in RoutingMethods)
+      foreach (var method in PreMethods)
       {
-        var routingMethod = ((HttpRequestMethod)route.GetCustomAttribute(typeof(HttpRequestMethod)))?.Method ?? HttpMethod.Get;
-        var routingPath = RESTPath.Combine(Prefix, ((Route)route.GetCustomAttribute(typeof(Route))).Path);
+        var parameters = new object[] { request };
 
-        bool sameMethod = String.Equals(routingMethod.Method, httpMethod.Method);
-        bool matchingUrl = routingPath.PathReMatch.IsMatch(requestPath);
-
-        if (sameMethod && matchingUrl)
-        {
-          var method = route;
-          var parameters = ExtractParameters(method, routingPath, requestPath, request);
-
-          if (method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null)
-            return await (Task<HttpResponseBase>)method.Invoke(this, parameters.ToArray());
-          else
-            return (HttpResponseBase)method.Invoke(this, parameters.ToArray());
-        }
+        if (method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null)
+          await (Task)method.Invoke(this, parameters);
+        else
+          method.Invoke(this, parameters);
       }
 
-      foreach (var route in DefaultMethods)
+      try
       {
-        var routingMethod = ((HttpRequestMethod)route.GetCustomAttribute(typeof(HttpRequestMethod)))?.Method ?? HttpMethod.Get;
-        bool sameMethod = String.Equals(routingMethod.Method, httpMethod.Method);
-
-        if (sameMethod)
+        foreach (var route in RoutingMethods)
         {
-          var method = route;
+          var routingMethod = ((HttpRequestMethod)route.GetCustomAttribute(typeof(HttpRequestMethod)))?.Method ?? HttpMethod.Get;
+          var routingPath = RESTPath.Combine(Prefix, ((Route)route.GetCustomAttribute(typeof(Route))).Path);
+
+          bool sameMethod = String.Equals(routingMethod.Method, httpMethod.Method);
+          bool matchingUrl = routingPath.PathReMatch.IsMatch(requestPath);
+
+          if (sameMethod && matchingUrl)
+          {
+            var method = route;
+            var parameters = ExtractParameters(method, routingPath, requestPath, request);
+
+            if (method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null)
+              return await (Task<HttpResponseBase>)method.Invoke(this, parameters.ToArray());
+            else
+              return (HttpResponseBase)method.Invoke(this, parameters.ToArray());
+          }
+        }
+
+        foreach (var route in DefaultMethods)
+        {
+          var routingMethod = ((HttpRequestMethod)route.GetCustomAttribute(typeof(HttpRequestMethod)))?.Method ?? HttpMethod.Get;
+          bool sameMethod = String.Equals(routingMethod.Method, httpMethod.Method);
+
+          if (sameMethod)
+          {
+            var method = route;
+
+            if (method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null)
+              return await (Task<HttpResponseBase>)method.Invoke(this, new[] { requestPath });
+            else
+              return (HttpResponseBase)method.Invoke(this, new[] { requestPath });
+          }
+        }
+
+      }
+      finally
+      {
+        foreach (var method in PostMethods)
+        {
+          var parameters = new object[] { request };
 
           if (method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null)
-            return await (Task<HttpResponseBase>)method.Invoke(this, new[] { requestPath });
+            await (Task)method.Invoke(this, parameters);
           else
-            return (HttpResponseBase)method.Invoke(this, new[] { requestPath });
+            method.Invoke(this, parameters);
         }
       }
 
