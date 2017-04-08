@@ -1,4 +1,5 @@
-﻿using Catnap.Server.Handlers;
+﻿using Caliburn.Micro;
+using Catnap.Server.Handlers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -59,7 +60,7 @@ namespace Catnap.Server
         }
         catch (Exception ex2)
         {
-          Debug.WriteLine($"ERROR: Fatal error! ({ex2.Message})");
+          LogManager.GetLog(GetType()).Error(ex2);//, $"ERROR: Fatal error! ({ex2.Message})");
         }
       });
     }
