@@ -6,6 +6,7 @@ using Windows.Web.Http;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Catnap.Server.Util;
+using Newtonsoft.Json;
 
 namespace Catnap.Server
 {
@@ -109,7 +110,12 @@ namespace Catnap.Server
 
       foreach (var param in methodParams)
       {
-        if (param.GetCustomAttribute(typeof(Body)) != null)
+        if (param.GetCustomAttribute(typeof(JsonBody)) != null)
+        {
+          dynamic jsonObj = JsonConvert.DeserializeObject(request.Content);
+          parameters.Add(jsonObj);
+        }
+        else if (param.GetCustomAttribute(typeof(Body)) != null)
           parameters.Add(request.Content);
         else
           parameters.Add(requestParams.Groups[param.Name].Value);

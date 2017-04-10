@@ -46,7 +46,7 @@ namespace Catnap.Server
           var requestHeader = reader.ReadLine();
 
           if (requestHeader == null)
-            throw new Exception("Unexpected end of socked stream");
+            throw new Exception("Unexpected end of socket stream");
 
           var request = new HttpRequest();
 

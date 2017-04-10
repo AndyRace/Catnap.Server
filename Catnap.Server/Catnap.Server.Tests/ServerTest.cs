@@ -82,12 +82,12 @@ namespace Catnap.Server.Tests
         public static void Initalize(TestContext context)
         {
             var httpServer = new HttpServer();
-            httpServer.restHandler.RegisterController(new TestController());
+            httpServer.RestHandler.RegisterController(new TestController());
 
             ServerTask = 
-                ThreadPool.RunAsync((w) =>
+                ThreadPool.RunAsync(async (w) =>
                 {
-                    httpServer.StartServer();
+                  await httpServer.StartServerAsync();
                 });
 
             Client = new HttpClient();
