@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap mp">
-  <Identity Name="efaf6867-f918-4afa-9213-6852b779b7b7" Publisher="CN=Wesley" Version="1.0.0.0" />
+  <Identity Name="efaf6867-f918-4afa-9213-6852b779b7b7" Publisher="CN=Andy" Version="1.0.0.0" />
   <mp:PhoneIdentity PhoneProductId="efaf6867-f918-4afa-9213-6852b779b7b7" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>Catnap.Server.Tests</DisplayName>
