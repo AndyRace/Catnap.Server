@@ -1,16 +1,10 @@
-﻿using Caliburn.Micro;
-using Catnap.Server.Handlers;
+﻿using Catnap.Server.Handlers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text;
 using System.Threading.Tasks;
-using Windows.ApplicationModel;
 using Windows.Networking.Sockets;
-using Windows.Storage;
-using Windows.Storage.Streams;
 using Windows.System.Threading;
 using Windows.Web.Http;
 
@@ -22,12 +16,12 @@ namespace Catnap.Server
     private readonly int port;
     public RESTHandler RestHandler { get; } = new RESTHandler();
 
-    public delegate void OnErrorEventHandler(Type type, Exception ex);
+    public delegate void OnErrorEventHandler(Type type, Exception ex, string info = null);
     public event OnErrorEventHandler OnError;
 
-    public void FireOnError(Type type, Exception ex)
+    public void FireOnError(Type type, Exception ex, string info = null)
     {
-      OnError?.Invoke(type, ex);
+      OnError?.Invoke(type, ex, info);
     }
 
     private List<String> AcceptedVerbs = new List<String> { HttpMethod.Get.Method, HttpMethod.Post.Method,
@@ -60,7 +54,7 @@ namespace Catnap.Server
         }
         catch (Exception ex2)
         {
-          LogManager.GetLog(GetType()).Error(ex2);//, $"ERROR: Fatal error! ({ex2.Message})");
+          FireOnError(GetType(), ex2, "Unexpected exception in listener.ConnectionReceived");
         }
       });
     }

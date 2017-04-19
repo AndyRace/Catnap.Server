@@ -121,12 +121,6 @@
     <Compile Include="Util\RESTPath.cs" />
     <Content Include="Properties\FringeServer.rd.xml" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\Caliburn-Micro\src\Caliburn.Micro\Caliburn.Micro.csproj">
-      <Project>{6D772B52-DA8F-4784-971A-4BF50CB6D306}</Project>
-      <Name>Caliburn.Micro</Name>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
