@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using Catnap.Server.Util;
 using Newtonsoft.Json;
+using System.Diagnostics;
 
 namespace Catnap.Server
 {
@@ -41,6 +42,7 @@ namespace Catnap.Server
       {
         var parameters = new object[] { request };
 
+        // Debug.WriteLine($"{requestPath}: Calling pre-execution method ({method.Name})");
         if (method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null)
           await (Task)method.Invoke(this, parameters);
         else
@@ -62,6 +64,7 @@ namespace Catnap.Server
             var method = route;
             var parameters = ExtractParameters(method, routingPath, requestPath, request);
 
+            Debug.WriteLine($"{requestPath}: Calling handler method ({method.Name})");
             if (method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null)
               return await (Task<HttpResponseBase>)method.Invoke(this, parameters.ToArray());
             else
@@ -78,6 +81,7 @@ namespace Catnap.Server
           {
             var method = route;
 
+            // Debug.WriteLine($"{requestPath}: Calling default handler method ({method.Name})");
             if (method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null)
               return await (Task<HttpResponseBase>)method.Invoke(this, new[] { requestPath });
             else
@@ -92,6 +96,7 @@ namespace Catnap.Server
         {
           var parameters = new object[] { request };
 
+          // Debug.WriteLine($"{requestPath}: Calling post-execution method ({method.Name})");
           if (method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null)
             await (Task)method.Invoke(this, parameters);
           else
@@ -99,7 +104,7 @@ namespace Catnap.Server
         }
       }
 
-      return NotFound($"Couldn't find a fitting method on the on matched controller '{ GetType().Name }' for path '{ url }'");
+      return NotFound($"Couldn't find a suitable method on controller '{GetType().Name}' for path '{url}'");
     }
 
     private List<object> ExtractParameters(MethodInfo method, RESTPath path, string requestPath, HttpRequest request)

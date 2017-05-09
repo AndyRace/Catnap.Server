@@ -48,7 +48,7 @@ namespace Catnap.Server
             }
             finally
             {
-              await socket.CancelIOAsync();
+              // await socket.CancelIOAsync();
             }
           }
         }
