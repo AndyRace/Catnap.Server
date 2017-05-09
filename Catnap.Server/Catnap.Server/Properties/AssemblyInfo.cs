@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Catnap.Server")]
 [assembly: AssemblyDescription("A lightweight and easy configurable REST server to be used in conjunction with Windows 10 (UWP).")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("https://github.com/wleev/Catnap.Server")]
 [assembly: AssemblyProduct("Catnap.Server")]
-[assembly: AssemblyCopyright("Copyright ©  2015")]
+[assembly: AssemblyCopyright("Copyright © 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
